@@ -1,0 +1,14 @@
+[
+{
+  "directory": "C:/Users/henry.hou/Desktop/Projects/OpenGL/StamFluid/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/opengl_template.dir/includes_CXX.rsp -g -o CMakeFiles\\opengl_template.dir\\src\\main.cpp.obj -c C:\\Users\\henry.hou\\Desktop\\Projects\\OpenGL\\StamFluid\\src\\main.cpp",
+  "file": "C:/Users/henry.hou/Desktop/Projects/OpenGL/StamFluid/src/main.cpp",
+  "output": "CMakeFiles/opengl_template.dir/src/main.cpp.obj"
+},
+{
+  "directory": "C:/Users/henry.hou/Desktop/Projects/OpenGL/StamFluid/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\gcc.exe  @CMakeFiles/opengl_template.dir/includes_C.rsp -g -o CMakeFiles\\opengl_template.dir\\src\\glad.c.obj -c C:\\Users\\henry.hou\\Desktop\\Projects\\OpenGL\\StamFluid\\src\\glad.c",
+  "file": "C:/Users/henry.hou/Desktop/Projects/OpenGL/StamFluid/src/glad.c",
+  "output": "CMakeFiles/opengl_template.dir/src/glad.c.obj"
+}
+]
