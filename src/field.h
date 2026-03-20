@@ -5,6 +5,7 @@
 #include "utils.h"
 
 struct Field{
+    // this class handles drawing process
 
     int dimension_ren[2];
     int numCells_ren; 
@@ -38,6 +39,7 @@ struct Field{
 
         numCells_ren = dimension_ren[0] * dimension_ren[1];
 
+        // cell size here is relative to screen position
         cellSizeX = 2.0f / dimension_ren[0];
         cellSizeY = 2.0f / dimension_ren[1];
 
