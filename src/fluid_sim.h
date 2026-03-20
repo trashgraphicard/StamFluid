@@ -326,14 +326,15 @@ struct FluidSim{
         return 0;
     }
 
-    void _handle_mouse_input() {
+    void _handle_source_input() {
         if (!window) return;
     
         double mouseX, mouseY;
         glfwGetCursorPos(window, &mouseX, &mouseY);
     
-        bool leftDown  = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)  == GLFW_PRESS;
+        bool leftDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)  == GLFW_PRESS;
         bool rightDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+        bool spaceDown = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
     
         if (!leftDown && !rightDown) {
             hasPrevMouse = false;
@@ -362,6 +363,20 @@ struct FluidSim{
                     if (sx >= 1 && sx <= dimension_ren[0] &&
                         sy >= 1 && sy <= dimension_ren[1]) {
                         dens_src[IX(stride, sx, sy)] = 10.0f;
+                    }
+                }
+            }
+        }
+
+        // space down: suck away density
+        if (spaceDown) {
+            for (int oy = -1; oy <= 1; oy++) {
+                for (int ox = -1; ox <= 1; ox++) {
+                    int sx = simX + ox;
+                    int sy = simY + oy;
+                    if (sx >= 1 && sx <= dimension_ren[0] &&
+                        sy >= 1 && sy <= dimension_ren[1]) {
+                        dens_src[IX(stride, sx, sy)] = -10.0f;
                     }
                 }
             }
@@ -423,7 +438,7 @@ struct FluidSim{
             glClear(GL_COLOR_BUFFER_BIT);
             glUseProgram(shader);
 
-            _handle_mouse_input();
+            _handle_source_input();
             _velocity_step();
             _density_step();
             _set_draw_type(0);
