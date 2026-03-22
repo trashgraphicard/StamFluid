@@ -4,8 +4,9 @@
 #include "fluid_sim.h"
 
 int main(){
-   int dimension[2] = {72, 54};
+   int dimension[2] = {96, 72};
    int resolution[2] = {1440, 1080};
    FluidSim sim = FluidSim(dimension, resolution);
    sim.run();
+   return 0;
 }

@@ -3,6 +3,7 @@
 #include "config.h"
 #include "field.h"
 #include "utils.h"
+#include "animation.h"
 
 struct FluidSim{
 
@@ -43,6 +44,8 @@ struct FluidSim{
     double prevMouseY = 0.0;
     bool hasPrevMouse = false;
 
+    Animation badApple;
+
     FluidSim(const int dms[2], const int res[2]): field(dms){
 
         dimension_ren[0] = dms[0];
@@ -69,11 +72,12 @@ struct FluidSim{
         divergence.resize(numCells_sim, 0.0f);
         pressure.resize(numCells_sim,0.0f);
 
-        dt = 1e-2f;
-        diffusion_coefficient = 1e-3;
-        viscosity = 1e-3;
+        dt = 0.01f;
+        diffusion_coefficient = 0.000001f;
+        viscosity = 0;
 
         shader = 0;
+        badApple = Animation();
 
         _init_sim();
     }
@@ -94,13 +98,13 @@ struct FluidSim{
         }
         
         
-        //int stride = dimension_sim[0];
-        //int cx = dimension_ren[0] / 2;
-        //int cy = dimension_ren[1] / 2;
-        //dens_prev[IX(stride, cx, cy)] = 1.0f;
-        //dens_prev[IX(stride, cx + 1, cy)] = 1.0f;
-        //dens_prev[IX(stride, cx, cy + 1)] = 1.0f;
-        //dens_prev[IX(stride, cx + 1, cy + 1)] = 1.0f;
+        int stride = dimension_sim[0];
+        int cx = dimension_ren[0] / 2;
+        int cy = dimension_ren[1] / 2;
+        dens_prev[IX(stride, cx, cy)] = 1.0f;
+        dens_prev[IX(stride, cx + 1, cy)] = 1.0f;
+        dens_prev[IX(stride, cx, cy + 1)] = 1.0f;
+        dens_prev[IX(stride, cx + 1, cy + 1)] = 1.0f;
     }
 
     void _add_source(std::vector<float>& x, std::vector<float>& s){
@@ -108,6 +112,25 @@ struct FluidSim{
         // s: the source to add to x
         for (int i=0; i<numCells_sim; i++){
             x[i] += dt*s[i];
+        }
+    }
+
+    void _set_by_source(std::vector<float>& x, std::vector<float>& s){
+        // set x to value s
+        // assumes s has render dimension and x has simulation dimension
+        int sX = dimension_sim[0];
+        int sY = dimension_sim[1];
+        int stride = sX;
+        for (int i=0; i<sX; i++){
+            for (int j=0; j<sY; j++){
+                if(i==0 || i==sX-1 || j==0 || j==sY-1){
+                    x[IX(stride, i, j)] = 0;
+                    continue;
+                }
+                int srcX = i-1;
+                int srcY = dimension_ren[1]-j;
+                x[IX(stride, i, j)] = s[IX(stride-2, srcX, srcY)];
+            }
         }
     }
 
@@ -353,11 +376,12 @@ struct FluidSim{
         int stride = dimension_sim[0];
         int simX = cellX + 1;
         int simY = cellY + 1;
+        int s = 3; // brush size
     
         // left mouse: add density with a small brush
         if (leftDown) {
-            for (int oy = -1; oy <= 1; oy++) {
-                for (int ox = -1; ox <= 1; ox++) {
+            for (int oy = -s; oy <= s; oy++) {
+                for (int ox = -s; ox <= s; ox++) {
                     int sx = simX + ox;
                     int sy = simY + oy;
                     if (sx >= 1 && sx <= dimension_ren[0] &&
@@ -370,8 +394,8 @@ struct FluidSim{
 
         // space down: suck away density
         if (spaceDown) {
-            for (int oy = -1; oy <= 1; oy++) {
-                for (int ox = -1; ox <= 1; ox++) {
+            for (int oy = -s; oy <= s; oy++) {
+                for (int ox = -s; ox <= s; ox++) {
                     int sx = simX + ox;
                     int sy = simY + oy;
                     if (sx >= 1 && sx <= dimension_ren[0] &&
@@ -387,8 +411,8 @@ struct FluidSim{
             float dx = static_cast<float>(mouseX - prevMouseX);
             float dy = static_cast<float>(prevMouseY - mouseY); // flip y
     
-            for (int oy = -1; oy <= 1; oy++) {
-                for (int ox = -1; ox <= 1; ox++) {
+            for (int oy = -s; oy <= s; oy++) {
+                for (int ox = -s; ox <= s; ox++) {
                     int sx = simX + ox;
                     int sy = simY + oy;
                     if (sx >= 1 && sx <= dimension_ren[0] &&
@@ -427,9 +451,12 @@ struct FluidSim{
 
     int run(){
 
+        badApple.cacheFrames();
         _init_gl();
 
         double lastTime = glfwGetTime();
+        double lastAnimTime = glfwGetTime();
+        double animFrameDuration = 1.0 / badApple.fps;
         int frameCount = 0;
 
         while (!glfwWindowShouldClose(window)) {
@@ -438,17 +465,25 @@ struct FluidSim{
             glClear(GL_COLOR_BUFFER_BIT);
             glUseProgram(shader);
 
-            _handle_source_input();
-            _velocity_step();
-            _density_step();
-            _set_draw_type(0);
-            _clear_sources();
-            field.draw(shader);
-
-            glfwSwapBuffers(window);
+            //_handle_source_input();
+            //_velocity_step();
+            //_density_step();
+            //_set_draw_type(0);
+            //_clear_sources();
+            //field.draw(shader);
 
             frameCount++;
             double currentTime = glfwGetTime();
+
+            if (currentTime - lastAnimTime >= animFrameDuration) {
+                _set_by_source(dens_cur, badApple.getCurrentFrame());
+                _set_draw_type(0);
+                badApple.nextFrame();
+                lastAnimTime += animFrameDuration;
+            }
+
+            field.draw(shader);
+            glfwSwapBuffers(window);
             if (currentTime - lastTime >= 1.0) {
                 std::cout << "FPS: " << frameCount << std::endl;
                 frameCount = 0;
