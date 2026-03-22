@@ -1,8 +1,8 @@
 #ifndef FIELD_H
 #define FIELD_H
-#include "config.h"
-#include "cell.h"
-#include "utils.h"
+#include "config.hpp"
+#include "cell.hpp"
+#include "utils.hpp"
 
 struct Field{
     // this class handles drawing process

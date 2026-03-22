@@ -3,7 +3,7 @@
 // lefacy class that handles drawing individual cells
 // This is scraped due to performance issues
 // But I will leave the code here anyway because it is my blood and tears
-#include "config.h"
+#include "config.hpp"
 
 struct CellMesh{
     float position[2];

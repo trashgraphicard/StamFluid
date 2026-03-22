@@ -1,9 +1,9 @@
 #ifndef FLUID_SIM_H
 #define FLUID_SIM_H
-#include "config.h"
-#include "field.h"
-#include "utils.h"
-#include "animation.h"
+#include "config.hpp"
+#include "field.hpp"
+#include "utils.hpp"
+#include "animation.hpp"
 
 struct FluidSim{
 
@@ -115,7 +115,7 @@ struct FluidSim{
         }
     }
 
-    void _set_by_source(std::vector<float>& x, std::vector<float>& s){
+    void _set_by_source_frame(std::vector<float>& x, std::vector<float>& s){
         // set x to value s
         // assumes s has render dimension and x has simulation dimension
         int sX = dimension_sim[0];
@@ -476,7 +476,7 @@ struct FluidSim{
             double currentTime = glfwGetTime();
 
             if (currentTime - lastAnimTime >= animFrameDuration) {
-                _set_by_source(dens_cur, badApple.getCurrentFrame());
+                _set_by_source_frame(dens_cur, badApple.getCurrentFrame());
                 _set_draw_type(0);
                 badApple.nextFrame();
                 lastAnimTime += animFrameDuration;

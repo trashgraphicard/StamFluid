@@ -1,7 +1,7 @@
-#include "config.h"
-#include "utils.h"
-#include "field.h"
-#include "fluid_sim.h"
+#include "config.hpp"
+#include "utils.hpp"
+#include "field.hpp"
+#include "fluid_sim.hpp"
 
 int main(){
    int dimension[2] = {96, 72};

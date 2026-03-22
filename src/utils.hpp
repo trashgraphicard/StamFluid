@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 // utility functions for the project
-#include "config.h"
+#include "config.hpp"
 
 unsigned int make_module(const std::string& filepath, unsigned int module_type){
     std::ifstream file;

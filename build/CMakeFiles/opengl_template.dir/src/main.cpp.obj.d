@@ -1,6 +1,6 @@
 CMakeFiles/opengl_template.dir/src/main.cpp.obj: \
  C:\Users\henry.hou\Desktop\Projects\OpenGL\StamFluid\src\main.cpp \
- C:\Users\henry.hou\Desktop\Projects\OpenGL\StamFluid\src\config.h \
+ C:\Users\henry.hou\Desktop\Projects\OpenGL\StamFluid\src\config.hpp \
  C:/msys64/ucrt64/include/c++/15.2.0/iostream \
  C:/msys64/ucrt64/include/c++/15.2.0/bits/requires_hosted.h \
  C:/msys64/ucrt64/include/c++/15.2.0/x86_64-w64-mingw32/bits/c++config.h \
@@ -158,8 +158,8 @@ CMakeFiles/opengl_template.dir/src/main.cpp.obj: \
  C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_bvector.h \
  C:/msys64/ucrt64/include/c++/15.2.0/bits/vector.tcc \
  C:/msys64/ucrt64/include/c++/15.2.0/ctime \
- C:\Users\henry.hou\Desktop\Projects\OpenGL\StamFluid\src\utils.h \
- C:\Users\henry.hou\Desktop\Projects\OpenGL\StamFluid\src\field.h \
- C:\Users\henry.hou\Desktop\Projects\OpenGL\StamFluid\src\cell.h \
- C:\Users\henry.hou\Desktop\Projects\OpenGL\StamFluid\src\fluid_sim.h \
- C:\Users\henry.hou\Desktop\Projects\OpenGL\StamFluid\src\animation.h
+ C:\Users\henry.hou\Desktop\Projects\OpenGL\StamFluid\src\utils.hpp \
+ C:\Users\henry.hou\Desktop\Projects\OpenGL\StamFluid\src\field.hpp \
+ C:\Users\henry.hou\Desktop\Projects\OpenGL\StamFluid\src\cell.hpp \
+ C:\Users\henry.hou\Desktop\Projects\OpenGL\StamFluid\src\fluid_sim.hpp \
+ C:\Users\henry.hou\Desktop\Projects\OpenGL\StamFluid\src\animation.hpp

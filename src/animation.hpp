@@ -1,6 +1,6 @@
 #ifndef ANIMATION_H
 #define ANIMATION_H
-#include "config.h"
+#include "config.hpp"
 
 struct Animation{
     std::string name;
