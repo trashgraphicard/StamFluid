@@ -115,6 +115,24 @@ struct FluidSim{
         }
     }
 
+    void _add_source_frame(std::vector<float>& x, std::vector<float>& s){
+        // add s to x
+        // assumes s has render dimension and x has simulation dimension
+        int sX = dimension_sim[0];
+        int sY = dimension_sim[1];
+        int stride = sX;
+        for (int i=0; i<sX; i++){
+            for (int j=0; j<sY; j++){
+                if(i==0 || i==sX-1 || j==0 || j==sY-1){
+                    continue;
+                }
+                int srcX = i-1;
+                int srcY = dimension_ren[1]-j;
+                x[IX(stride, i, j)] += s[IX(stride-2, srcX, srcY)];
+            }
+        }
+    }
+
     void _set_by_source_frame(std::vector<float>& x, std::vector<float>& s){
         // set x to value s
         // assumes s has render dimension and x has simulation dimension
@@ -451,7 +469,7 @@ struct FluidSim{
 
     int run(){
 
-        badApple.cacheFrames();
+        badApple.cacheData();
         _init_gl();
 
         double lastTime = glfwGetTime();
@@ -476,13 +494,19 @@ struct FluidSim{
             double currentTime = glfwGetTime();
 
             if (currentTime - lastAnimTime >= animFrameDuration) {
-                _set_by_source_frame(dens_cur, badApple.getCurrentFrame());
-                _set_draw_type(0);
+                //_set_by_source_frame(dens_cur, badApple.getCurrentFrame());
+                _add_source_frame(u_cur, badApple.getCurrentFlowX());
+                _add_source_frame(v_cur, badApple.getCurrentFlowY());
                 badApple.nextFrame();
                 lastAnimTime += animFrameDuration;
             }
 
+            _velocity_step();
+            _density_step();
+            _set_draw_type(0);
+            _clear_sources();
             field.draw(shader);
+
             glfwSwapBuffers(window);
             if (currentTime - lastTime >= 1.0) {
                 std::cout << "FPS: " << frameCount << std::endl;

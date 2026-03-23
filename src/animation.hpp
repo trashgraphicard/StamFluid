@@ -5,8 +5,12 @@
 struct Animation{
     std::string name;
     std::string pathDir;
-    std::string pathFramesTxt;
+    std::string pathFramesBin;
+    std::string pathFlowXBin;
+    std::string pathFlowYBin;
     std::vector<std::vector<float>> frames;
+    std::vector<std::vector<float>> flowX;
+    std::vector<std::vector<float>> flowY;
     int resolution[2];
     int pixelPerFrame;
     int fps;
@@ -19,10 +23,13 @@ struct Animation{
         resolution[1] = 72;
         pixelPerFrame = resolution[0] * resolution[1];
         fps = 30;
-        numFrames = 500;
+        //numFrames = 6571;
+        numFrames = 600;
         std::string resDir = std::to_string(resolution[0]) + "x" + std::to_string(resolution[1]);
         pathDir = "../badApple/" + resDir;
-        pathFramesTxt = pathDir + "/frames.txt";
+        pathFramesBin = pathDir + "/frames.bin";
+        pathFlowXBin = pathDir + "/flowX.bin";
+        pathFlowYBin = pathDir + "/flowY.bin";
         currentFrame = 0;
     }
 
@@ -34,47 +41,90 @@ struct Animation{
         this->fps = fps;
     }
 
+    void cacheData(){
+        cacheFrames();
+        cacheOpticalFlow();
+    }
+
+    // read the binary files and cache them in vector
     void cacheFrames(){
         frames.clear();
         frames.resize(numFrames, std::vector<float>(pixelPerFrame, 0.0f));
 
-        std::ifstream inFS(pathFramesTxt);
+        std::ifstream inFS(pathFramesBin, std::ios::binary);
         if (!inFS.is_open()){
-            std::cout << "Failed to open frame data file: " << pathFramesTxt << std::endl;
+            std::cout << "Failed to open frame data file: " << pathFramesBin << std::endl;
             return;
         }
 
-        std::string line;
+        std::vector<unsigned char> buffer(pixelPerFrame);
         int frameIdx = 0;
 
-        while (std::getline(inFS, line) && frameIdx < numFrames){
-            std::istringstream iss(line);
+        while (frameIdx < numFrames &&
+               inFS.read(reinterpret_cast<char*>(buffer.data()), pixelPerFrame)){
 
             for (int i = 0; i < pixelPerFrame; i++){
-                float value;
-                if (!(iss >> value)){
-                    std::cout << "Warning: frame " << frameIdx
-                              << " has fewer than " << pixelPerFrame
-                              << " values." << std::endl;
-                    break;
-                }
-
-                // if file stores 0..255 grayscale, normalize:
-                frames[frameIdx][i] = value / 255.0f;
-
-                // if file stores 0 or 1 already, use this instead:
-                // frames[frameIdx][i] = value;
+                frames[frameIdx][i] = buffer[i] / 255.0f;
             }
 
             std::cout << "Caching frame: " << frameIdx << std::endl;
             frameIdx++;
         }
 
+        if (!inFS.eof() && inFS.fail()){
+            std::cout << "Warning: binary read failed before reaching EOF." << std::endl;
+        }
+
         if (frameIdx != numFrames){
             std::cout << "Warning: expected " << numFrames
                       << " frames, loaded " << frameIdx << std::endl;
         } else {
-            std::cout << "Loaded " << frameIdx << " frames from " << pathFramesTxt << std::endl;
+            std::cout << "Loaded " << frameIdx << " frames from " << pathFramesBin << std::endl;
+        }
+    }
+
+    void cacheOpticalFlow(){
+        int numFlowFrames = numFrames - 1;
+
+        flowX.clear();
+        flowY.clear();
+        flowX.resize(numFlowFrames, std::vector<float>(pixelPerFrame, 0.0f));
+        flowY.resize(numFlowFrames, std::vector<float>(pixelPerFrame, 0.0f));
+
+        std::ifstream inFSX(pathFlowXBin, std::ios::binary);
+        if (!inFSX.is_open()){
+            std::cout << "Failed to open optical flow X file: " << pathFlowXBin << std::endl;
+            return;
+        }
+
+        std::ifstream inFSY(pathFlowYBin, std::ios::binary);
+        if (!inFSY.is_open()){
+            std::cout << "Failed to open optical flow Y file: " << pathFlowYBin << std::endl;
+            return;
+        }
+
+        int frameIdx = 0;
+
+        while (frameIdx < numFlowFrames &&
+               inFSX.read(reinterpret_cast<char*>(flowX[frameIdx].data()),
+                          pixelPerFrame * sizeof(float)) &&
+               inFSY.read(reinterpret_cast<char*>(flowY[frameIdx].data()),
+                          pixelPerFrame * sizeof(float))) {
+
+            std::cout << "Caching optical flow frame: " << frameIdx << std::endl;
+            frameIdx++;
+        }
+
+        if ((!inFSX.eof() && inFSX.fail()) || (!inFSY.eof() && inFSY.fail())){
+            std::cout << "Warning: binary optical flow read failed before reaching EOF." << std::endl;
+        }
+
+        if (frameIdx != numFlowFrames){
+            std::cout << "Warning: expected " << numFlowFrames
+                      << " optical flow frames, loaded " << frameIdx << std::endl;
+        } else {
+            std::cout << "Loaded " << frameIdx << " optical flow frames from "
+                      << pathFlowXBin << " and " << pathFlowYBin << std::endl;
         }
     }
 
@@ -87,11 +137,18 @@ struct Animation{
         return frames[currentFrame];
     }
 
+    std::vector<float>& getCurrentFlowX(){
+        return flowX[currentFrame];
+    }
+    std::vector<float>& getCurrentFlowY(){
+        return flowY[currentFrame];
+    }
+
     void printInfo(){
         std::cout << name << std::endl;
         std::cout << numFrames << std::endl;
         std::cout << pathDir << std::endl;
-        std::cout << pathFramesTxt << std::endl;
+        std::cout << pathFramesBin << std::endl;
     }
 };
 
