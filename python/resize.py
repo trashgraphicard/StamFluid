@@ -1,6 +1,8 @@
 import cv2
 from pathlib import Path
 
+# These python code are vibe coded garbage, do not read
+
 def resize(w, h):
     # Input / output settings
     src_dir = Path("../badApple/original/")
