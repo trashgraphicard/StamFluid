@@ -2,10 +2,7 @@
 ## Link to paper
 [Real-Time Fluid Dynamics for Games](https://graphics.cs.cmu.edu/nsp/course/15-464/Fall09/papers/StamFluidforGames.pdf)
 ## Demo Video
-<video width="960" height="540" controls>
-  <source src="demo/StamFluidDemo.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+[Demo Video](https://youtu.be/Pj68e72z6Sk)
 
 ## Future Plans
  - Currently I am working on playing the bad apple animation on this sim, this will be the first step.  
