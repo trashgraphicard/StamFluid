@@ -15,7 +15,7 @@ OUT_FLOW_X_BIN = OUT_DIR / "flowX.bin"
 OUT_FLOW_Y_BIN = OUT_DIR / "flowY.bin"
 OUT_FLOW_IMG_DIR = OUT_DIR / "opticalFlows"
 
-WRITE_FRAMES_BIN = True
+WRITE_FRAMES_BIN = False
 WRITE_FLOW_BIN = True
 WRITE_FLOW_DEBUG_IMAGES = True
 

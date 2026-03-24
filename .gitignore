@@ -1,2 +1,6 @@
 .venv/
 badApple/
+build/
+dependencies/
+lib/
+src/glad.c

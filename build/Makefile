@@ -123,24 +123,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named opengl_template
+# Target rules for targets named stam_fluid
 
 # Build rule for target.
-opengl_template: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 opengl_template
-.PHONY : opengl_template
+stam_fluid: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 stam_fluid
+.PHONY : stam_fluid
 
 # fast build rule for target.
-opengl_template/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\opengl_template.dir\build.make CMakeFiles/opengl_template.dir/build
-.PHONY : opengl_template/fast
+stam_fluid/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\stam_fluid.dir\build.make CMakeFiles/stam_fluid.dir/build
+.PHONY : stam_fluid/fast
 
 src/glad.obj: src/glad.c.obj
 .PHONY : src/glad.obj
 
 # target to build an object file
 src/glad.c.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\opengl_template.dir\build.make CMakeFiles/opengl_template.dir/src/glad.c.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\stam_fluid.dir\build.make CMakeFiles/stam_fluid.dir/src/glad.c.obj
 .PHONY : src/glad.c.obj
 
 src/glad.i: src/glad.c.i
@@ -148,7 +148,7 @@ src/glad.i: src/glad.c.i
 
 # target to preprocess a source file
 src/glad.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\opengl_template.dir\build.make CMakeFiles/opengl_template.dir/src/glad.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\stam_fluid.dir\build.make CMakeFiles/stam_fluid.dir/src/glad.c.i
 .PHONY : src/glad.c.i
 
 src/glad.s: src/glad.c.s
@@ -156,7 +156,7 @@ src/glad.s: src/glad.c.s
 
 # target to generate assembly for a file
 src/glad.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\opengl_template.dir\build.make CMakeFiles/opengl_template.dir/src/glad.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\stam_fluid.dir\build.make CMakeFiles/stam_fluid.dir/src/glad.c.s
 .PHONY : src/glad.c.s
 
 src/main.obj: src/main.cpp.obj
@@ -164,7 +164,7 @@ src/main.obj: src/main.cpp.obj
 
 # target to build an object file
 src/main.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\opengl_template.dir\build.make CMakeFiles/opengl_template.dir/src/main.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\stam_fluid.dir\build.make CMakeFiles/stam_fluid.dir/src/main.cpp.obj
 .PHONY : src/main.cpp.obj
 
 src/main.i: src/main.cpp.i
@@ -172,7 +172,7 @@ src/main.i: src/main.cpp.i
 
 # target to preprocess a source file
 src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\opengl_template.dir\build.make CMakeFiles/opengl_template.dir/src/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\stam_fluid.dir\build.make CMakeFiles/stam_fluid.dir/src/main.cpp.i
 .PHONY : src/main.cpp.i
 
 src/main.s: src/main.cpp.s
@@ -180,7 +180,7 @@ src/main.s: src/main.cpp.s
 
 # target to generate assembly for a file
 src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\opengl_template.dir\build.make CMakeFiles/opengl_template.dir/src/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\stam_fluid.dir\build.make CMakeFiles/stam_fluid.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
 # Help Target
@@ -192,7 +192,7 @@ help:
 	@echo ... codegen
 	@echo ... edit_cache
 	@echo ... rebuild_cache
-	@echo ... opengl_template
+	@echo ... stam_fluid
 	@echo ... src/glad.obj
 	@echo ... src/glad.i
 	@echo ... src/glad.s

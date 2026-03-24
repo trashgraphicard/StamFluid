@@ -32,6 +32,10 @@ struct FluidSim{
     std::vector<float> divergence;
     std::vector<float> pressure;
 
+    // buffers for MacCormack advection
+    std::vector<float> advect_tmp1;
+    std::vector<float> advect_tmp2;
+
     Field field;
     float dt; // delta time
     float diffusion_coefficient;
@@ -71,6 +75,8 @@ struct FluidSim{
         dens_src.resize(numCells_sim, 0.0f);
         divergence.resize(numCells_sim, 0.0f);
         pressure.resize(numCells_sim,0.0f);
+        advect_tmp1.resize(numCells_sim,0.0f);
+        advect_tmp2.resize(numCells_sim,0.0f);
 
         dt = 0.01f;
         diffusion_coefficient = 0.000001f;
@@ -89,10 +95,12 @@ struct FluidSim{
         for (int row = 0; row < dimension_ren[1]; row++){
             for (int col = 0; col < dimension_ren[0]; col++){
                 float grayscale = (float)n/numCells_ren;
-                n++;
-                u_cur[IX(dimension_sim[0], col+1, row+1)] = grayscale;
-                dens_cur[IX(dimension_sim[0], col+1, row+1)] = grayscale;
-                float tempColor[3] = {grayscale, grayscale, grayscale};
+                //n++;
+                //u_cur[IX(dimension_sim[0], col+1, row+1)] = grayscale;
+                //dens_cur[IX(dimension_sim[0], col+1, row+1)] = grayscale;
+                //float tempColor[3] = {grayscale, grayscale, grayscale};
+                dens_cur[IX(dimension_sim[0], col+1, row+1)] = 1.0f;
+                float tempColor[3] = {0.0f, 0.0f, 0.0f};
                 field.setCellColor(col, row, tempColor);
             }
         }
@@ -112,6 +120,7 @@ struct FluidSim{
         // s: the source to add to x
         for (int i=0; i<numCells_sim; i++){
             x[i] += dt*s[i];
+            x[i] = clamp(x[i]);
         }
     }
 
@@ -129,6 +138,7 @@ struct FluidSim{
                 int srcX = i-1;
                 int srcY = dimension_ren[1]-j;
                 x[IX(stride, i, j)] += s[IX(stride-2, srcX, srcY)];
+                x[IX(stride, i, j)] = clamp(x[IX(stride, i, j)]);
             }
         }
     }
@@ -201,6 +211,7 @@ struct FluidSim{
         dtx0 = dt*rX;
         dty0 = dt*rY;
 
+
         for (i=1; i<=rX; i++){
             for (j=1; j<=rY; j++){
                 // trace back from the current cell along the velocity to the source position
@@ -222,6 +233,38 @@ struct FluidSim{
                                       s1*(t0*d0[IX(stride, i1, j0)] + t1*d0[IX(stride, i1, j1)]);
             }
         }
+        _set_bnd(b, d);
+    }
+
+    void _advect_macCormack(int b, std::vector<float>& d, std::vector<float>& d0,
+                            std::vector<float>& u, std::vector<float>& v,
+                            std::vector<float>& tmp1, std::vector<float>& tmp2){
+        int rX = dimension_ren[0];
+        int rY = dimension_ren[1];
+        int stride = dimension_sim[0];
+
+        // Step 1: forward advection
+        _advect(b, tmp1, d0, u, v);
+
+        // Build negated velocity
+        std::vector<float> negU(numCells_sim, 0.0f);
+        std::vector<float> negV(numCells_sim, 0.0f);
+        for (int i = 0; i < numCells_sim; i++) {
+            negU[i] = -u[i];
+            negV[i] = -v[i];
+        }
+
+        // Step 2: reverse advection
+        _advect(b, tmp2, tmp1, negU, negV);
+
+        // Step 3: correction
+        for (int i = 1; i <= rX; i++) {
+            for (int j = 1; j <= rY; j++) {
+                int idx = IX(stride, i, j);
+                d[idx] = tmp1[idx] + 0.5f * (d0[idx] - tmp2[idx]);
+            }
+        }
+
         _set_bnd(b, d);
     }
 
@@ -281,6 +324,7 @@ struct FluidSim{
         _diffuse(0, dens_cur, dens_prev, diffusion_coefficient);
         std::swap(dens_prev, dens_cur);
         _advect(0, dens_cur, dens_prev, u_cur, v_cur);
+        //_advect_macCormack(0, dens_cur, dens_prev, u_cur, v_cur, advect_tmp1, advect_tmp2);
     }
 
     void _velocity_step(){
@@ -483,24 +527,20 @@ struct FluidSim{
             glClear(GL_COLOR_BUFFER_BIT);
             glUseProgram(shader);
 
-            //_handle_source_input();
-            //_velocity_step();
-            //_density_step();
-            //_set_draw_type(0);
-            //_clear_sources();
-            //field.draw(shader);
-
             frameCount++;
             double currentTime = glfwGetTime();
 
             if (currentTime - lastAnimTime >= animFrameDuration) {
                 //_set_by_source_frame(dens_cur, badApple.getCurrentFrame());
+                _add_source_frame(dens_cur, badApple.getCurrentSdfDens());
                 _add_source_frame(u_cur, badApple.getCurrentFlowX());
                 _add_source_frame(v_cur, badApple.getCurrentFlowY());
+                _add_source_frame(dens_cur, badApple.getCurrentFrame());
                 badApple.nextFrame();
                 lastAnimTime += animFrameDuration;
             }
 
+            //_handle_source_input();
             _velocity_step();
             _density_step();
             _set_draw_type(0);

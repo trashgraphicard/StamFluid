@@ -159,7 +159,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=opengl_template
+CMAKE_PROJECT_NAME:STATIC=stam_fluid
 
 //Value Computed by CMake
 CMAKE_PROJECT_SPDX_LICENSE:STATIC=
@@ -276,6 +276,15 @@ opengl_template_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
 opengl_template_SOURCE_DIR:STATIC=C:/Users/henry.hou/Desktop/Projects/OpenGL/StamFluid
+
+//Value Computed by CMake
+stam_fluid_BINARY_DIR:STATIC=C:/Users/henry.hou/Desktop/Projects/OpenGL/StamFluid/build
+
+//Value Computed by CMake
+stam_fluid_IS_TOP_LEVEL:STATIC=ON
+
+//Value Computed by CMake
+stam_fluid_SOURCE_DIR:STATIC=C:/Users/henry.hou/Desktop/Projects/OpenGL/StamFluid
 
 
 ########################

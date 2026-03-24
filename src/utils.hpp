@@ -68,4 +68,8 @@ int IX(int stride, int x, int y){
     return y*stride + x;
 }
 
+float clamp(float x){
+    return std::clamp(x, -1.0f, 1.0f);
+}
+
 #endif // UTILS_H

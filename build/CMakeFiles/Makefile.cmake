@@ -62,5 +62,5 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/opengl_template.dir/DependInfo.cmake"
+  "CMakeFiles/stam_fluid.dir/DependInfo.cmake"
   )

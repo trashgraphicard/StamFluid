@@ -41,9 +41,9 @@ def resize(w, h):
 
     print("Done.")
 
-def write_to_txt():
+def write_to_bin():
     src_dir = Path("../badApple/96x72/frames")
-    out_file = Path("../badApple/96x72/frames.txt")
+    out_file = Path("../badApple/96x72/frames.bin")
 
     image_paths = sorted(src_dir.glob("*.jpg"))
 
@@ -53,16 +53,15 @@ def write_to_txt():
 
     print(f"Found {len(image_paths)} frames")
 
-    with out_file.open("w", encoding="utf-8") as f_out:
+    with out_file.open("wb") as f_out:
         for idx, img_path in enumerate(image_paths, start=1):
             img = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
             if img is None:
                 print(f"[WARN] Failed to read {img_path}")
                 continue
 
-            flat = img.flatten()
-            line = " ".join(str(int(v)) for v in flat)
-            f_out.write(line + "\n")
+            flat = img.flatten().astype("uint8")
+            f_out.write(flat.tobytes())
 
             if idx % 100 == 0 or idx == len(image_paths):
                 print(f"Processed {idx}/{len(image_paths)}")
@@ -70,5 +69,4 @@ def write_to_txt():
     print(f"Done. Wrote {out_file.resolve()}")
 
 if __name__ == "__main__":
-    #resize(72, 54)
-    write_to_txt()
+    write_to_bin()

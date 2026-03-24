@@ -8,9 +8,11 @@ struct Animation{
     std::string pathFramesBin;
     std::string pathFlowXBin;
     std::string pathFlowYBin;
+    std::string pathSdfBin;
     std::vector<std::vector<float>> frames;
     std::vector<std::vector<float>> flowX;
     std::vector<std::vector<float>> flowY;
+    std::vector<std::vector<float>> sdfDens;
     int resolution[2];
     int pixelPerFrame;
     int fps;
@@ -24,12 +26,13 @@ struct Animation{
         pixelPerFrame = resolution[0] * resolution[1];
         fps = 30;
         //numFrames = 6571;
-        numFrames = 600;
+        numFrames = 3000;
         std::string resDir = std::to_string(resolution[0]) + "x" + std::to_string(resolution[1]);
         pathDir = "../badApple/" + resDir;
         pathFramesBin = pathDir + "/frames.bin";
         pathFlowXBin = pathDir + "/flowX.bin";
         pathFlowYBin = pathDir + "/flowY.bin";
+        pathSdfBin = pathDir + "/sdf.bin";
         currentFrame = 0;
     }
 
@@ -44,6 +47,7 @@ struct Animation{
     void cacheData(){
         cacheFrames();
         cacheOpticalFlow();
+        cacheSdfAsDens();
     }
 
     // read the binary files and cache them in vector
@@ -64,7 +68,8 @@ struct Animation{
                inFS.read(reinterpret_cast<char*>(buffer.data()), pixelPerFrame)){
 
             for (int i = 0; i < pixelPerFrame; i++){
-                frames[frameIdx][i] = buffer[i] / 255.0f;
+                // invert and multiply by -1, will be used to add to density to bring out the shape
+                frames[frameIdx][i] = -1.0f*(1-(buffer[i] / 255.0f));
             }
 
             std::cout << "Caching frame: " << frameIdx << std::endl;
@@ -128,6 +133,58 @@ struct Animation{
         }
     }
 
+    void cacheSdfAsDens(){
+        sdfDens.clear();
+        sdfDens.resize(numFrames, std::vector<float>(pixelPerFrame, 0.0f));
+
+        std::ifstream inFS(pathSdfBin, std::ios::binary);
+        if (!inFS.is_open()){
+            std::cout << "Failed to open sdf file: " << pathSdfBin <<   std::endl;
+            return;
+        }
+
+        std::vector<float> buffer(pixelPerFrame, 0.0f);
+        int frameIdx = 0;
+
+        while (frameIdx < numFrames &&
+               inFS.read(reinterpret_cast<char*>(buffer.data()),
+                         pixelPerFrame * sizeof(float))) {
+
+            for (int i = 0; i < pixelPerFrame; i++){
+                float v = buffer[i];
+
+                // clamp to [0, 1]
+                if (v < 0.0f) v = 0.0f;
+                if (v > 1.0f) v = 1.0f;
+
+                // invert: 1 - v
+                v = 1.0f - v;
+
+                // expand to [-1, 1]
+                v = v * 2.0f - 0.5f;
+                // shrink range
+                v *= 0.1f;
+
+                sdfDens[frameIdx][i] = v;
+            }
+
+            std::cout << "Caching sdf dens frame: " << frameIdx << std::endl;
+            frameIdx++;
+        }
+
+        if (!inFS.eof() && inFS.fail()){
+            std::cout << "Warning: binary sdf read failed before reaching EOF.  " << std::endl;
+        }
+
+        if (frameIdx != numFrames){
+            std::cout << "Warning: expected " << numFrames
+                      << " sdf frames, loaded " << frameIdx << std::endl;
+        } else {
+            std::cout << "Loaded " << frameIdx
+                      << " sdf dens frames from " << pathSdfBin << std::endl;
+        }
+    }
+
     void nextFrame(){
         if(currentFrame < numFrames-1)
             currentFrame++;
@@ -136,12 +193,14 @@ struct Animation{
     std::vector<float>& getCurrentFrame(){
         return frames[currentFrame];
     }
-
     std::vector<float>& getCurrentFlowX(){
         return flowX[currentFrame];
     }
     std::vector<float>& getCurrentFlowY(){
         return flowY[currentFrame];
+    }
+    std::vector<float>& getCurrentSdfDens(){
+        return sdfDens[currentFrame];
     }
 
     void printInfo(){
