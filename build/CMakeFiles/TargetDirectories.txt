@@ -1,3 +1,0 @@
-C:/Users/henry.hou/Desktop/Projects/OpenGL/StamFluid/build/CMakeFiles/stam_fluid.dir
-C:/Users/henry.hou/Desktop/Projects/OpenGL/StamFluid/build/CMakeFiles/edit_cache.dir
-C:/Users/henry.hou/Desktop/Projects/OpenGL/StamFluid/build/CMakeFiles/rebuild_cache.dir
