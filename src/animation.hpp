@@ -30,10 +30,9 @@ struct Animation{
         pixelPerFrame = resolution[0] * resolution[1];
         fps = 30;
         //numFrames = 6571;
-        numFrames = 3000;
+        numFrames = 1000;
         std::string resDir = std::to_string(resolution[0]) + "x" + std::to_string(resolution[1]);
         pathDir = "../badApple/" + resDir;
-        //pathDensAdd = pathDir + "/dens_add.bin";
         pathDensAdd = pathDir + "/dens_add.bin";
         pathDensSub = pathDir + "/dens_sub.bin";
         pathU = pathDir + "/u.bin";
@@ -58,13 +57,13 @@ struct Animation{
     }
 
     void cacheData(){
-        cacheAsType(densAdd, pathDensAdd, 1);
-        cacheAsType(densSub, pathDensSub, 2);
-        cacheAsType(u, pathU, 3);
-        cacheAsType(v, pathV, 3);
+        cacheAsType(densAdd, pathDensAdd, 1, 0.5f);
+        cacheAsType(densSub, pathDensSub, 2, 1.0f);
+        cacheAsType(u, pathU, 3, 2.0f);
+        cacheAsType(v, pathV, 3, 2.0f);
     }
 
-    void cacheAsType(std::vector<std::vector<float>>& x, std::string path, int type){
+    void cacheAsType(std::vector<std::vector<float>>& x, std::string path, int type, float strength){
         // cache binary files into vectors, type determine type of caching
             // type 1: As adding density
             // type 2: As subtracting density
@@ -84,15 +83,15 @@ struct Animation{
             for (int i = 0; i < pixelPerFrame; i++){
 
                 if(type == 1){
-                    x[frameIdx][i] = (buffer[i] / 255.0f);
+                    x[frameIdx][i] = (static_cast<float>(buffer[i]) / 255.0f) * strength;
                 }
                 else if(type == 2){
                     // negate
-                    x[frameIdx][i] = -1.0f * (buffer[i]/255.0f);
+                    x[frameIdx][i] = -1.0f * (static_cast<float>(buffer[i])/255.0f) * strength;
                 }
                 else if(type == 3){
                     // remap to -1 ~ 1
-                    x[frameIdx][i] = (buffer[i]/255.0f)*2 - 1;
+                    x[frameIdx][i] = ((static_cast<float>(buffer[i])/255.0f)*2 - 1) * strength;
                 }
             }
             frameIdx++;

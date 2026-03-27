@@ -99,7 +99,7 @@ struct FluidSim{
                 //u_cur[IX(dimension_sim[0], col+1, row+1)] = grayscale;
                 //dens_cur[IX(dimension_sim[0], col+1, row+1)] = grayscale;
                 //float tempColor[3] = {grayscale, grayscale, grayscale};
-                dens_cur[IX(dimension_sim[0], col+1, row+1)] = 0.5f;
+                dens_cur[IX(dimension_sim[0], col+1, row+1)] = 0.0f;
                 float tempColor[3] = {0.0f, 0.0f, 0.0f};
                 field.setCellColor(col, row, tempColor);
             }
@@ -115,16 +115,16 @@ struct FluidSim{
         dens_prev[IX(stride, cx + 1, cy + 1)] = 1.0f;
     }
 
-    void _add_source(std::vector<float>& x, std::vector<float>& s){
+    void _add_source(std::vector<float>& x, std::vector<float>& s, bool toClamp){
         // x: things to add to
         // s: the source to add to x
         for (int i=0; i<numCells_sim; i++){
             x[i] += dt*s[i];
-            x[i] = clamp(x[i]);
+            if(toClamp) x[i] = clamp(x[i]);
         }
     }
 
-    void _add_source_frame(std::vector<float>& x, std::vector<float>& s){
+    void _add_source_frame(std::vector<float>& x, std::vector<float>& s, bool toClamp){
         // add s to x
         // assumes s has render dimension and x has simulation dimension
         int sX = dimension_sim[0];
@@ -138,7 +138,9 @@ struct FluidSim{
                 int srcX = i-1;
                 int srcY = dimension_ren[1]-j;
                 x[IX(stride, i, j)] += s[IX(stride-2, srcX, srcY)];
-                x[IX(stride, i, j)] = clamp(x[IX(stride, i, j)]);
+                if (toClamp){
+                    x[IX(stride, i, j)] = clamp(x[IX(stride, i, j)]);
+                }
             }
         }
     }
@@ -319,7 +321,7 @@ struct FluidSim{
 
     void _density_step(){
 
-        _add_source(dens_cur, dens_src);
+        _add_source(dens_cur, dens_src, true);
         std::swap(dens_prev, dens_cur);
         _diffuse(0, dens_cur, dens_prev, diffusion_coefficient);
         std::swap(dens_prev, dens_cur);
@@ -329,8 +331,8 @@ struct FluidSim{
 
     void _velocity_step(){
 
-        _add_source(u_cur, u_src);
-        _add_source(v_cur, v_src);
+        _add_source(u_cur, u_src, false);
+        _add_source(v_cur, v_src, false);
 
         std::swap(u_prev, u_cur);
         _diffuse(1, u_cur, u_prev, viscosity);
@@ -498,16 +500,20 @@ struct FluidSim{
         int rX = dimension_ren[0];
         int rY = dimension_ren[1];
         int stride = dimension_sim[0];
-        if(t == 0){
-            for (int i=0; i<rX; i++){
-                for(int j=0; j<rY; j++){
+        for (int i=0; i<rX; i++){
+            for(int j=0; j<rY; j++){
+                if(t == 0){
                     float dens = dens_cur[IX(stride, i+1, j+1)];
                     float color[3] = {dens, dens, dens};
                     field.setCellColor(i, j, color);
+                } else if (t == 1){
+                    float vx = u_cur[IX(stride, i+1, j+1)] * 1;
+                    float vy = v_cur[IX(stride, i+1, j+1)] * 1;
+                    //float color[3] = {std::abs(vx), std::abs(vy), 0.0f};
+                    float color[3] = {vx, vy, 0.0f};
+                    field.setCellColor(i, j, color);
                 }
             }
-        } else {
-            throw std::invalid_argument("Bruh read the comment bruh");
         }
     }
 
@@ -533,10 +539,10 @@ struct FluidSim{
             if (currentTime - lastAnimTime >= animFrameDuration) {
                 //_set_by_source_frame(dens_cur, badApple.getCurrentV());
                 //_set_by_source_frame(dens_cur, badApple.getCurrentFrame());
-                _add_source_frame(dens_cur, badApple.getCurrentDensAdd());
-                _add_source_frame(dens_cur, badApple.getCurrentDensSub());
-                _add_source_frame(u_cur, badApple.getCurrentU());
-                _add_source_frame(v_cur, badApple.getCurrentV());
+                _add_source_frame(dens_cur, badApple.getCurrentDensAdd(), true);
+                _add_source_frame(dens_cur, badApple.getCurrentDensSub(), true);
+                _add_source_frame(u_cur, badApple.getCurrentU(), false);
+                _add_source_frame(v_cur, badApple.getCurrentV(), false);
                 badApple.nextFrame();
                 lastAnimTime += animFrameDuration;
             }
@@ -551,7 +557,7 @@ struct FluidSim{
             glfwSwapBuffers(window);
             if (currentTime - lastTime >= 1.0) {
                 std::cout << "FPS: " << frameCount << std::endl;
-                frameCount = 0;
+                frameCount = 1;
                 lastTime = currentTime;
             }
         }
