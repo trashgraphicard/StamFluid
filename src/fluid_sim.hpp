@@ -79,7 +79,7 @@ struct FluidSim{
         advect_tmp2.resize(numCells_sim,0.0f);
 
         dt = 0.01f;
-        diffusion_coefficient = 0.000001f;
+        diffusion_coefficient = 0.0f;
         viscosity = 0;
 
         shader = 0;
@@ -99,7 +99,7 @@ struct FluidSim{
                 //u_cur[IX(dimension_sim[0], col+1, row+1)] = grayscale;
                 //dens_cur[IX(dimension_sim[0], col+1, row+1)] = grayscale;
                 //float tempColor[3] = {grayscale, grayscale, grayscale};
-                dens_cur[IX(dimension_sim[0], col+1, row+1)] = 1.0f;
+                dens_cur[IX(dimension_sim[0], col+1, row+1)] = 0.5f;
                 float tempColor[3] = {0.0f, 0.0f, 0.0f};
                 field.setCellColor(col, row, tempColor);
             }
@@ -531,11 +531,12 @@ struct FluidSim{
             double currentTime = glfwGetTime();
 
             if (currentTime - lastAnimTime >= animFrameDuration) {
+                //_set_by_source_frame(dens_cur, badApple.getCurrentV());
                 //_set_by_source_frame(dens_cur, badApple.getCurrentFrame());
-                _add_source_frame(dens_cur, badApple.getCurrentSdfDens());
-                _add_source_frame(u_cur, badApple.getCurrentFlowX());
-                _add_source_frame(v_cur, badApple.getCurrentFlowY());
-                _add_source_frame(dens_cur, badApple.getCurrentFrame());
+                _add_source_frame(dens_cur, badApple.getCurrentDensAdd());
+                _add_source_frame(dens_cur, badApple.getCurrentDensSub());
+                _add_source_frame(u_cur, badApple.getCurrentU());
+                _add_source_frame(v_cur, badApple.getCurrentV());
                 badApple.nextFrame();
                 lastAnimTime += animFrameDuration;
             }
@@ -544,8 +545,8 @@ struct FluidSim{
             _velocity_step();
             _density_step();
             _set_draw_type(0);
-            _clear_sources();
             field.draw(shader);
+            _clear_sources();
 
             glfwSwapBuffers(window);
             if (currentTime - lastTime >= 1.0) {

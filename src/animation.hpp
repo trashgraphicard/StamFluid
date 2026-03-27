@@ -5,14 +5,18 @@
 struct Animation{
     std::string name;
     std::string pathDir;
+    std::string pathDensAdd;
+    std::string pathDensSub;
+    std::string pathU;
+    std::string pathV;
     std::string pathFramesBin;
-    std::string pathFlowXBin;
-    std::string pathFlowYBin;
-    std::string pathSdfBin;
+
+    std::vector<std::vector<float>> densAdd;
+    std::vector<std::vector<float>> densSub;
+    std::vector<std::vector<float>> u;
+    std::vector<std::vector<float>> v;
     std::vector<std::vector<float>> frames;
-    std::vector<std::vector<float>> flowX;
-    std::vector<std::vector<float>> flowY;
-    std::vector<std::vector<float>> sdfDens;
+
     int resolution[2];
     int pixelPerFrame;
     int fps;
@@ -29,10 +33,19 @@ struct Animation{
         numFrames = 3000;
         std::string resDir = std::to_string(resolution[0]) + "x" + std::to_string(resolution[1]);
         pathDir = "../badApple/" + resDir;
+        //pathDensAdd = pathDir + "/dens_add.bin";
+        pathDensAdd = pathDir + "/dens_add.bin";
+        pathDensSub = pathDir + "/dens_sub.bin";
+        pathU = pathDir + "/u.bin";
+        pathV = pathDir + "/v.bin";
         pathFramesBin = pathDir + "/frames.bin";
-        pathFlowXBin = pathDir + "/flowX.bin";
-        pathFlowYBin = pathDir + "/flowY.bin";
-        pathSdfBin = pathDir + "/sdf.bin";
+
+        densAdd.resize(numFrames, std::vector<float>(pixelPerFrame, 0.0f));
+        densSub.resize(numFrames, std::vector<float>(pixelPerFrame, 0.0f));
+        u.resize(numFrames, std::vector<float>(pixelPerFrame, 0.0f));
+        v.resize(numFrames, std::vector<float>(pixelPerFrame, 0.0f));
+        frames.resize(numFrames, std::vector<float>(pixelPerFrame, 0.0f));
+
         currentFrame = 0;
     }
 
@@ -45,19 +58,57 @@ struct Animation{
     }
 
     void cacheData(){
-        cacheFrames();
-        cacheOpticalFlow();
-        cacheSdfAsDens();
+        cacheAsType(densAdd, pathDensAdd, 1);
+        cacheAsType(densSub, pathDensSub, 2);
+        cacheAsType(u, pathU, 3);
+        cacheAsType(v, pathV, 3);
+    }
+
+    void cacheAsType(std::vector<std::vector<float>>& x, std::string path, int type){
+        // cache binary files into vectors, type determine type of caching
+            // type 1: As adding density
+            // type 2: As subtracting density
+            // type 3: As zero centered velocity (Bin file contain normalized velocity, we need to remap it here so
+            // it performs as intended in simulation)
+
+        std::ifstream inFS(path, std::ios::binary);
+        if (!inFS.is_open()){
+            std::cout << "Failed to open file: " << path << std::endl;
+            return;
+        }
+
+        std::vector<unsigned char> buffer(pixelPerFrame);
+        int frameIdx = 0;
+
+        while (frameIdx < numFrames && inFS.read(reinterpret_cast<char*>(buffer.data()), pixelPerFrame)){
+            for (int i = 0; i < pixelPerFrame; i++){
+
+                if(type == 1){
+                    x[frameIdx][i] = (buffer[i] / 255.0f);
+                }
+                else if(type == 2){
+                    // negate
+                    x[frameIdx][i] = -1.0f * (buffer[i]/255.0f);
+                }
+                else if(type == 3){
+                    // remap to -1 ~ 1
+                    x[frameIdx][i] = (buffer[i]/255.0f)*2 - 1;
+                }
+            }
+            frameIdx++;
+        }
+        if (!inFS.eof() && inFS.fail()){
+            std::cout << "Warning: binary read failed before reaching EOF." << std::endl;
+        }
+        std::cout << "Loaded " << frameIdx << " frames from " << path << std::endl;
     }
 
     // read the binary files and cache them in vector
     void cacheFrames(){
-        frames.clear();
-        frames.resize(numFrames, std::vector<float>(pixelPerFrame, 0.0f));
 
-        std::ifstream inFS(pathFramesBin, std::ios::binary);
+        std::ifstream inFS(pathDensAdd, std::ios::binary);
         if (!inFS.is_open()){
-            std::cout << "Failed to open frame data file: " << pathFramesBin << std::endl;
+            std::cout << "Failed to open frame data file: " << pathDensAdd << std::endl;
             return;
         }
 
@@ -68,8 +119,7 @@ struct Animation{
                inFS.read(reinterpret_cast<char*>(buffer.data()), pixelPerFrame)){
 
             for (int i = 0; i < pixelPerFrame; i++){
-                // invert and multiply by -1, will be used to add to density to bring out the shape
-                frames[frameIdx][i] = -1.0f*(1-(buffer[i] / 255.0f));
+                frames[frameIdx][i] = (buffer[i] / 255.0f);
             }
 
             std::cout << "Caching frame: " << frameIdx << std::endl;
@@ -84,10 +134,11 @@ struct Animation{
             std::cout << "Warning: expected " << numFrames
                       << " frames, loaded " << frameIdx << std::endl;
         } else {
-            std::cout << "Loaded " << frameIdx << " frames from " << pathFramesBin << std::endl;
+            std::cout << "Loaded " << frameIdx << " frames from " << pathDensAdd << std::endl;
         }
     }
 
+    /*
     void cacheOpticalFlow(){
         int numFlowFrames = numFrames - 1;
 
@@ -184,30 +235,33 @@ struct Animation{
                       << " sdf dens frames from " << pathSdfBin << std::endl;
         }
     }
+    */
 
     void nextFrame(){
         if(currentFrame < numFrames-1)
             currentFrame++;
     }
 
+    std::vector<float>& getCurrentDensAdd(){
+        return densAdd[currentFrame];
+    }
+    std::vector<float>& getCurrentDensSub(){
+        return densSub[currentFrame];
+    }
+    std::vector<float>& getCurrentU(){
+        return u[currentFrame];
+    }
+    std::vector<float>& getCurrentV(){
+        return v[currentFrame];
+    }
     std::vector<float>& getCurrentFrame(){
         return frames[currentFrame];
-    }
-    std::vector<float>& getCurrentFlowX(){
-        return flowX[currentFrame];
-    }
-    std::vector<float>& getCurrentFlowY(){
-        return flowY[currentFrame];
-    }
-    std::vector<float>& getCurrentSdfDens(){
-        return sdfDens[currentFrame];
     }
 
     void printInfo(){
         std::cout << name << std::endl;
         std::cout << numFrames << std::endl;
         std::cout << pathDir << std::endl;
-        std::cout << pathFramesBin << std::endl;
     }
 };
 
