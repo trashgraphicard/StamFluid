@@ -4,6 +4,7 @@
 #include "field.hpp"
 #include "utils.hpp"
 #include "animation.hpp"
+#include "brush.hpp"
 
 struct FluidSim{
 
@@ -238,38 +239,6 @@ struct FluidSim{
         _set_bnd(b, d);
     }
 
-    void _advect_macCormack(int b, std::vector<float>& d, std::vector<float>& d0,
-                            std::vector<float>& u, std::vector<float>& v,
-                            std::vector<float>& tmp1, std::vector<float>& tmp2){
-        int rX = dimension_ren[0];
-        int rY = dimension_ren[1];
-        int stride = dimension_sim[0];
-
-        // Step 1: forward advection
-        _advect(b, tmp1, d0, u, v);
-
-        // Build negated velocity
-        std::vector<float> negU(numCells_sim, 0.0f);
-        std::vector<float> negV(numCells_sim, 0.0f);
-        for (int i = 0; i < numCells_sim; i++) {
-            negU[i] = -u[i];
-            negV[i] = -v[i];
-        }
-
-        // Step 2: reverse advection
-        _advect(b, tmp2, tmp1, negU, negV);
-
-        // Step 3: correction
-        for (int i = 1; i <= rX; i++) {
-            for (int j = 1; j <= rY; j++) {
-                int idx = IX(stride, i, j);
-                d[idx] = tmp1[idx] + 0.5f * (d0[idx] - tmp2[idx]);
-            }
-        }
-
-        _set_bnd(b, d);
-    }
-
     void _project(std::vector<float>& u, std::vector<float>&v, std::vector<float>& p, std::vector<float>& div){
 
         // compute the divergence free velocity field
@@ -326,7 +295,6 @@ struct FluidSim{
         _diffuse(0, dens_cur, dens_prev, diffusion_coefficient);
         std::swap(dens_prev, dens_cur);
         _advect(0, dens_cur, dens_prev, u_cur, v_cur);
-        //_advect_macCormack(0, dens_cur, dens_prev, u_cur, v_cur, advect_tmp1, advect_tmp2);
     }
 
     void _velocity_step(){
@@ -440,7 +408,7 @@ struct FluidSim{
         int stride = dimension_sim[0];
         int simX = cellX + 1;
         int simY = cellY + 1;
-        int s = 3; // brush size
+        int s = 7; // brush size
     
         // left mouse: add density with a small brush
         if (leftDown) {
@@ -517,7 +485,7 @@ struct FluidSim{
         }
     }
 
-    int run(){
+    int run_apple(){
 
         badApple.cacheData();
         _init_gl();
@@ -537,8 +505,6 @@ struct FluidSim{
             double currentTime = glfwGetTime();
 
             if (currentTime - lastAnimTime >= animFrameDuration) {
-                //_set_by_source_frame(dens_cur, badApple.getCurrentV());
-                //_set_by_source_frame(dens_cur, badApple.getCurrentFrame());
                 _add_source_frame(dens_cur, badApple.getCurrentDensAdd(), true);
                 _add_source_frame(dens_cur, badApple.getCurrentDensSub(), true);
                 _add_source_frame(u_cur, badApple.getCurrentU(), false);
@@ -547,7 +513,7 @@ struct FluidSim{
                 lastAnimTime += animFrameDuration;
             }
 
-            //_handle_source_input();
+            _handle_source_input();
             _velocity_step();
             _density_step();
             _set_draw_type(0);
@@ -560,6 +526,36 @@ struct FluidSim{
                 frameCount = 1;
                 lastTime = currentTime;
             }
+        }
+        glDeleteProgram(shader);
+        return 0;
+    }
+
+    int run_brush(){
+        std::string brushName = "thumb";
+        Brush thumb = Brush(brushName, dimension_ren);
+        thumb.cacheData();
+        _init_gl();
+
+        while(!glfwWindowShouldClose(window)){
+            glfwPollEvents();
+
+            glClear(GL_COLOR_BUFFER_BIT);
+            glUseProgram(shader);
+
+            thumb.moveBrush(window);
+            _add_source_frame(dens_cur, thumb.getDensAdd(), true);
+            _add_source_frame(dens_cur, thumb.getDensSub(), true);
+            _add_source_frame(u_cur, thumb.getU(), false);
+            _add_source_frame(v_cur, thumb.getV(), false);
+
+            _velocity_step();
+            _density_step();
+            _set_draw_type(0);
+
+            field.draw(shader);
+            _clear_sources();
+            glfwSwapBuffers(window);
         }
         glDeleteProgram(shader);
         return 0;

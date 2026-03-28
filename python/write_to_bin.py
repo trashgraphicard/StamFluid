@@ -24,8 +24,8 @@ def write_to_bin(src_dir, out_file):
     print(f"Done. Wrote {out_file.resolve()}")
 
 def main():
-    src_dir = Path("../badApple/96x72/v")
-    out_file = Path("../badApple/96x72/v.bin")
+    src_dir = Path("../brush/thumb/128x128/v/")
+    out_file = Path("../brush/thumb/128x128/v.bin")
     write_to_bin(src_dir, out_file)
 
 if __name__ == "__main__":
