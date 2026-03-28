@@ -2,7 +2,7 @@
 ## Link to paper
 [Real-Time Fluid Dynamics for Games](https://graphics.cs.cmu.edu/nsp/course/15-464/Fall09/papers/StamFluidforGames.pdf)
 ## Demo Video
-[Simulating Bad Apple](https://youtu.be/wuk7xfic9eg?si=TD_dBHX0Ma-4Q6Rb)
+[Simulating Bad Apple](https://youtu.be/wuk7xfic9eg?si=TD_dBHX0Ma-4Q6Rb)  
 [Interactive Window](https://youtu.be/Pj68e72z6Sk)
 
 ## Future Plans
