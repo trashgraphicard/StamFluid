@@ -1,6 +1,8 @@
 .venv/
 badApple/**
+!badApple/**/
 !badApple/**/*.bin
 build/
 brush/**
+!brush/**/
 !brush/**/*.bin
