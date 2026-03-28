@@ -54,10 +54,10 @@ struct Brush{
     }
 
     void cacheData(){
-        cacheAsType(densAdd, pathDensAdd, 1, 0.2f);
+        cacheAsType(densAdd, pathDensAdd, 1, 0.08f);
         cacheAsType(densSub, pathDensSub, 2, 1.0f);
         cacheAsType(u, pathU, 3, 0.1f);
-        cacheAsType(v, pathV, 3, 0.03f);
+        cacheAsType(v, pathV, 3, 0.1f);
 
         densAddBase = densAdd;
         densSubBase = densSub;
@@ -153,7 +153,7 @@ struct Brush{
         double mouseX, mouseY;
         glfwGetCursorPos(window, &mouseX, &mouseY);
 
-        if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) != GLFW_PRESS){
+        if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) != GLFW_PRESS){
             hasPrevMouse = false;
             return;
         }

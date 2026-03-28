@@ -408,7 +408,7 @@ struct FluidSim{
         int stride = dimension_sim[0];
         int simX = cellX + 1;
         int simY = cellY + 1;
-        int s = 7; // brush size
+        int s = 4; // brush size
     
         // left mouse: add density with a small brush
         if (leftDown) {
@@ -485,14 +485,11 @@ struct FluidSim{
         }
     }
 
-    int run_apple(){
+    int run_basic(){
 
-        badApple.cacheData();
         _init_gl();
 
         double lastTime = glfwGetTime();
-        double lastAnimTime = glfwGetTime();
-        double animFrameDuration = 1.0 / badApple.fps;
         int frameCount = 0;
 
         while (!glfwWindowShouldClose(window)) {
@@ -503,15 +500,6 @@ struct FluidSim{
 
             frameCount++;
             double currentTime = glfwGetTime();
-
-            if (currentTime - lastAnimTime >= animFrameDuration) {
-                _add_source_frame(dens_cur, badApple.getCurrentDensAdd(), true);
-                _add_source_frame(dens_cur, badApple.getCurrentDensSub(), true);
-                _add_source_frame(u_cur, badApple.getCurrentU(), false);
-                _add_source_frame(v_cur, badApple.getCurrentV(), false);
-                badApple.nextFrame();
-                lastAnimTime += animFrameDuration;
-            }
 
             _handle_source_input();
             _velocity_step();
@@ -527,6 +515,64 @@ struct FluidSim{
                 lastTime = currentTime;
             }
         }
+        glDeleteProgram(shader);
+        return 0;
+    }
+
+    int run_bad_apple(){
+
+        badApple.cacheData();
+        if (_init_gl() != 0) return -1;
+
+        const double frameDuration = 1.0 / 30.0;
+
+        double lastFrameTime = glfwGetTime();
+        bool animStarted = false;
+        bool enterWasDown = false;
+
+        while (!glfwWindowShouldClose(window)) {
+            glfwPollEvents();
+
+            // One-time start on Enter
+            bool enterDown = glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS;
+            if (!animStarted && enterDown && !enterWasDown) {
+                animStarted = true;
+                lastFrameTime = glfwGetTime();
+                std::cout << "Animation started\n";
+            }
+            enterWasDown = enterDown;
+
+            double currentTime = glfwGetTime();
+
+            // Cap to 30 FPS
+            if (currentTime - lastFrameTime < frameDuration) {
+                continue;
+            }
+            lastFrameTime += frameDuration;
+
+            glClear(GL_COLOR_BUFFER_BIT);
+            glUseProgram(shader);
+            _handle_source_input();
+
+            if (animStarted) {
+
+                _add_source_frame(dens_cur, badApple.getCurrentDensAdd(), true);
+                _add_source_frame(dens_cur, badApple.getCurrentDensSub(), true);
+                _add_source_frame(u_cur, badApple.getCurrentU(), false);
+                _add_source_frame(v_cur, badApple.getCurrentV(), false);
+
+                badApple.nextFrame();
+                std::cout << "Frame " << badApple.currentFrame << "\n";
+            }
+            _velocity_step();
+            _density_step();
+            _set_draw_type(0);
+            field.draw(shader);
+            _clear_sources();
+
+            glfwSwapBuffers(window);
+        }
+
         glDeleteProgram(shader);
         return 0;
     }
@@ -548,7 +594,7 @@ struct FluidSim{
             _add_source_frame(dens_cur, thumb.getDensSub(), true);
             _add_source_frame(u_cur, thumb.getU(), false);
             _add_source_frame(v_cur, thumb.getV(), false);
-
+            _handle_source_input();
             _velocity_step();
             _density_step();
             _set_draw_type(0);
